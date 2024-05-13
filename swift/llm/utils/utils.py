@@ -678,8 +678,11 @@ def inference(model: PreTrainedModel,
     }
     template.model = model
     inputs, tokenizer_kwargs = template.encode(example)
-    if len(inputs) == 0:
-        raise ValueError('input_ids exceeds `max_length`. Please increase the value of `max_length`.')
+
+    truncation_strategy = kwargs.pop('truncation_strategy', None)
+    if len(inputs) == 0 and truncation_strategy == 'delete':
+        return '', history
+
     inputs.pop('labels', None)
     tokenizer = template.tokenizer
     device = next(model.parameters()).device
@@ -827,6 +830,10 @@ def is_vllm_available():
 
 def is_xtuner_available():
     return importlib.util.find_spec('xtuner') is not None
+
+
+def is_unsloth_available() -> bool:
+    return importlib.util.find_spec('unsloth') is not None
 
 
 def get_time_info(log_history: List[Dict[str, Any]], n_train_samples: Optional[int]) -> Optional[Dict[str, Any]]:
